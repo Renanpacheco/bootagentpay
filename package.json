@@ -1,6 +1,7 @@
 {
   "name": "agentpay",
   "version": "1.0.0",
+  "type": "module",
   "description": "init repository",
   "main": "index.js",
   "scripts": {
