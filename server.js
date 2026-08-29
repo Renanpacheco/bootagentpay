@@ -1,15 +1,12 @@
 import express from "express";
 import cors from "cors";
+import { usuariosDB } from "./database.js";
+import { processarMensagemDoAgente } from "./agent.js";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-const usuariosDB = {
-  "user_1": { id: "user_1", nome: "Dev QA", limite: 300.00 },
-  "user_2": { id: "user_2", nome: "Maria Silva", limite: 1000.00 }
-};
 
 
 function autenticarUsuario(req, res, next) {
@@ -25,7 +22,6 @@ function autenticarUsuario(req, res, next) {
   req.usuario = usuariosDB[usuarioId];
   next();
 }
-
 
 app.post("/api/login", (req, res) => {
   const { userId } = req.body;
@@ -54,16 +50,25 @@ app.post("/api/chat", autenticarUsuario, async (req, res) => {
     });
   }
 
+  try {
+    
+    const resultado = await processarMensagemDoAgente(req.usuario.id, history);
 
-  return res.status(200).json({
-    status: "sucesso",
-    usuario_autenticado: req.usuario.nome,
-    mensagem_recebida: history[history.length - 1] || null
-  });
+    return res.status(200).json({
+      resposta: resultado.respostaFinal,
+      historico: resultado.historicoAtualizado
+    });
+  } catch (erro) {
+    console.error("Erro no processamento do chat:", erro);
+    return res.status(500).json({ 
+      erro: "ERRO_INTERNO", 
+      mensagem: "Falha ao processar a mensagem com o agente." 
+    });
+  }
 });
 
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor da API rodando na porta ${PORT}`);
+  console.log(`🚀 API backend rodando na porta ${PORT}`);
 });
