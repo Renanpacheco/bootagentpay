@@ -9,16 +9,30 @@ app.use(cors());
 app.use(express.json());
 
 
-function autenticarUsuario(req, res, next) {
-  const usuarioId = req.headers["x-user-id"];
+const tokensValidos = new Map();
 
-  if (!usuarioId || !usuariosDB[usuarioId]) {
+
+function autenticarUsuario(req, res, next) {
+  const authHeader = req.headers["authorization"];
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ 
       erro: "NAO_AUTORIZADO", 
-      mensagem: "Acesso negado. Forneça um ID de usuário válido no header 'x-user-id'." 
+      mensagem: "Token de autenticação não fornecido. Faça login para acessar." 
     });
   }
 
+  const token = authHeader.split(" ")[1];
+  const usuarioId = tokensValidos.get(token);
+
+  if (!usuarioId || !usuariosDB[usuarioId]) {
+    return res.status(401).json({ 
+      erro: "TOKEN_INVALIDO", 
+      mensagem: "Token inválido ou sessão expirada. Faça login novamente." 
+    });
+  }
+
+  
   req.usuario = usuariosDB[usuarioId];
   next();
 }
@@ -27,18 +41,25 @@ app.post("/api/login", (req, res) => {
   const { userId } = req.body;
 
   if (!userId || !usuariosDB[userId]) {
-    return res.status(404).json({ 
-      erro: "USUARIO_NAO_ENCONTRADO", 
+    return res.status(401).json({ 
+      erro: "CREDENCIAIS_INVALIDAS", 
       mensagem: "Usuário não encontrado." 
     });
   }
 
+  const token = `token_${Math.random().toString(36).substring(2, 10)}`;
+  tokensValidos.set(token, userId);
+
   return res.status(200).json({
     mensagem: "Login realizado com sucesso!",
-    usuario: usuariosDB[userId]
+    token: token,
+    usuario: {
+      id: usuariosDB[userId].id,
+      nome: usuariosDB[userId].nome,
+      limite: usuariosDB[userId].limite
+    }
   });
 });
-
 
 app.post("/api/chat", autenticarUsuario, async (req, res) => {
   const { history } = req.body;
@@ -51,7 +72,6 @@ app.post("/api/chat", autenticarUsuario, async (req, res) => {
   }
 
   try {
-    
     const resultado = await processarMensagemDoAgente(req.usuario.id, history);
 
     return res.status(200).json({
@@ -62,11 +82,10 @@ app.post("/api/chat", autenticarUsuario, async (req, res) => {
     console.error("Erro no processamento do chat:", erro);
     return res.status(500).json({ 
       erro: "ERRO_INTERNO", 
-      mensagem: "Falha ao processar a mensagem com o agente." 
+      mensagem: "Falha ao processar a resposta do agente." 
     });
   }
 });
-
 
 const PORT = 3000;
 app.listen(PORT, () => {
