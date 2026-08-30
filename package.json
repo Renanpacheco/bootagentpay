@@ -5,11 +5,13 @@
   "description": "init repository",
   "main": "index.js",
   "scripts": {
-    "devstart": "nodemon server.js"
+    "devstart": "nodemon server.js",
+    "start": "dotenvx run -- node server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@dotenvx/dotenvx": "^2.22.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "socket.io": "^4.8.3"

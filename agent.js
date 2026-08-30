@@ -15,10 +15,10 @@ function executarToolNoBackend(usuarioId, name, args) {
 }
 
 export async function processarMensagemDoAgente(usuarioId, historicoMensagens) {
-  const OLLAMA_URL = "http://localhost:11434/api/chat";
+  const OLLAMA_URL = process.env.OLLAMA_URL;
 
   let payload = {
-    model: "qwen3:1.7b",
+    model: process.env.MODEL_NAME,
     messages: historicoMensagens,
     tools: TOOLS_SCHEMA,
     stream: false
