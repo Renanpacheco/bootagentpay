@@ -75,18 +75,6 @@ export default function Login({ onLogin }) {
 
                         {erro && <div className="error-banner">{erro}</div>}
                     </form>
-
-                    <div className="hint-box">
-                        <p>Usuários de teste</p>
-                        <div className="hint-row">
-                            <span><code>ana</code> / 123456</span>
-                            <span>limite R$500</span>
-                        </div>
-                        <div className="hint-row">
-                            <span><code>bruno</code> / 123456</span>
-                            <span>limite R$2000</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
