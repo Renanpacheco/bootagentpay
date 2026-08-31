@@ -1,31 +1,22 @@
-import { useState } from 'react';
+import { useState } from "react";
 import Login from './Login';
 import Chat from './Chat';
 
 export default function App() {
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [user, setUser] = useState(() => {
-        const username = localStorage.getItem('username');
-        const limite = localStorage.getItem('limite');
-        return username ? { username, limite } : null;
-    });
+  const [usuario, setUsuario] = useState(null);
 
-    function handleLogin(data) {
-        setToken(data.token);
-        setUser({ username: data.username, limite: data.limite });
-    }
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setUsuario(null);
+  };
 
-    function handleLogout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        localStorage.removeItem('limite');
-        setToken(null);
-        setUser(null);
-    }
-
-    return token ? (
-        <Chat token={token} user={user} onLogout={handleLogout} />
-    ) : (
-        <Login onLogin={handleLogin} />
-    );
+  return (
+    <main className="app-container">
+      {!usuario ? (
+        <Login onLogin={(user) => setUsuario(user)} />
+      ) : (
+        <Chat usuario={usuario} onLogout={handleLogout} />
+      )}
+    </main>
+  );
 }

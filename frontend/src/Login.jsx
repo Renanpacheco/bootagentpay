@@ -11,14 +11,22 @@ export default function Login({ onLogin }) {
         e.preventDefault();
         setErro('');
         setLoading(true);
+        
         try {
-            const { data } = await login(username, password);
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('username', data.username);
-            localStorage.setItem('limite', data.limite);
-            onLogin(data);
-        } catch {
-            setErro('Usuário ou senha inválidos.');
+            // Chama a API diretamente (sem a desestruturação { data })
+            const resposta = await login(username, password);
+
+            // Salva os dados retornados no localStorage
+            localStorage.setItem('token', resposta.token);
+            localStorage.setItem('username', resposta.usuario.nome);
+            localStorage.setItem('userId', resposta.usuario.id);
+            localStorage.setItem('limite', resposta.usuario.limite);
+
+            // Notifica o componente pai repassando o objeto do usuário
+            onLogin(resposta.usuario);
+        } catch (err) {
+            // Exibe a mensagem de erro retornada pelo backend ou uma genérica
+            setErro(err.message || 'Usuário ou senha inválidos.');
         } finally {
             setLoading(false);
         }
@@ -51,7 +59,7 @@ export default function Login({ onLogin }) {
                             <label htmlFor="username">Usuário</label>
                             <input
                                 id="username"
-                                placeholder="ex: ana"
+                                placeholder="ex: user_1"
                                 value={username}
                                 onChange={e => setUsername(e.target.value)}
                                 autoComplete="username"

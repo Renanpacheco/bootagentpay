@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
-import { sendChat } from './api';
+import { enviarMensagemChat } from './api';
 
-export default function Chat({ token, user, onLogout }) {
+export default function Chat({ user, onLogout }) {
     const [historico, setHistorico] = useState([]);
     const [input, setInput] = useState('');
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef(null);
+
+    // Normaliza o nome do usuário vindo da prop ou do localStorage
+    const nomeUsuario = user?.nome || user?.username || localStorage.getItem('username') || 'Usuário';
+    const limiteUsuario = user?.limite || localStorage.getItem('limite');
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -15,13 +19,16 @@ export default function Chat({ token, user, onLogout }) {
 
     async function enviar() {
         if (!input.trim() || loading) return;
+
         const novoHistorico = [...historico, { role: 'user', content: input }];
         setHistorico(novoHistorico);
         setInput('');
         setLoading(true);
+
         try {
-            const { data } = await sendChat(token, novoHistorico);
-            setHistorico(data.historico);
+            // O token já é pego internamente no api.js via localStorage
+            const dados = await enviarMensagemChat(novoHistorico);
+            setHistorico(dados.historico);
         } catch {
             setHistorico([
                 ...novoHistorico,
@@ -42,8 +49,8 @@ export default function Chat({ token, user, onLogout }) {
                     pagamentos.ai
                 </div>
                 <div className="user-info">
-                    {user?.username && <span>Olá, {user.username}</span>}
-                    {user?.limite && <span className="limite-tag">limite R${Number(user.limite).toFixed(2)}</span>}
+                    {nomeUsuario && <span>Olá, {nomeUsuario}</span>}
+                    {limiteUsuario && <span className="limite-tag">limite R${Number(limiteUsuario).toFixed(2)}</span>}
                     <button className="logout-btn" onClick={onLogout}>Sair</button>
                 </div>
             </header>
@@ -61,7 +68,7 @@ export default function Chat({ token, user, onLogout }) {
                         {mensagensVisiveis.map((m, i) => (
                             <div key={i} className={`msg-row ${m.role === 'user' ? 'user' : 'agent'}`}>
                                 <div className={`avatar ${m.role === 'user' ? 'user' : 'agent'}`}>
-                                    {m.role === 'user' ? (user?.username?.[0]?.toUpperCase() || 'V') : 'A'}
+                                    {m.role === 'user' ? (nomeUsuario[0]?.toUpperCase() || 'V') : 'A'}
                                 </div>
                                 <div className={`bubble ${m.role === 'user' ? 'user' : 'agent'}`}>{m.content}</div>
                             </div>
