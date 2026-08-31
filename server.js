@@ -38,15 +38,19 @@ function autenticarUsuario(req, res, next) {
 }
 
 app.post("/api/login", (req, res) => {
-  const { userId } = req.body;
+  const { userId, senha } = req.body;
 
-  if (!userId || !usuariosDB[userId]) {
+  const usuario = usuariosDB[userId];
+
+  if (!usuario || String(usuario.senha) !== String(senha)) {
+    
     return res.status(401).json({ 
       erro: "CREDENCIAIS_INVALIDAS", 
-      mensagem: "Usuário não encontrado." 
+      mensagem: "Usuário ou senha incorretos." 
     });
   }
 
+  
   const token = `token_${Math.random().toString(36).substring(2, 10)}`;
   tokensValidos.set(token, userId);
 
@@ -54,9 +58,9 @@ app.post("/api/login", (req, res) => {
     mensagem: "Login realizado com sucesso!",
     token: token,
     usuario: {
-      id: usuariosDB[userId].id,
-      nome: usuariosDB[userId].nome,
-      limite: usuariosDB[userId].limite
+      id: usuario.id,
+      nome: usuario.nome,
+      limite: usuario.limite
     }
   });
 });
