@@ -1,16 +1,16 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+    baseURL: import.meta.env.VITE_API_URL,
 });
 
-// 1. Login aceitando userId e senha
+
 export async function login(userId, senha) {
     const response = await api.post('/api/login', { userId, senha });
-    return response.data; // Retorna direto o objeto { mensagem, token, usuario }
+    return response.data;
 }
 
-// 2. Função com o nome esperado pelo Chat.jsx
+
 export async function enviarMensagemChat(history) {
     const token = localStorage.getItem('token');
 
@@ -23,5 +23,5 @@ export async function enviarMensagemChat(history) {
             },
         }
     );
-    return response.data; // Retorna direto { resposta, historico }
+    return response.data; 
 }

@@ -7,7 +7,7 @@ export default function Chat({ user, onLogout }) {
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef(null);
 
-    // Normaliza o nome do usuário vindo da prop ou do localStorage
+    
     const nomeUsuario = user?.nome || user?.username || localStorage.getItem('username') || 'Usuário';
     const limiteUsuario = user?.limite || localStorage.getItem('limite');
 
@@ -26,7 +26,7 @@ export default function Chat({ user, onLogout }) {
         setLoading(true);
 
         try {
-            // O token já é pego internamente no api.js via localStorage
+            
             const dados = await enviarMensagemChat(novoHistorico);
             setHistorico(dados.historico);
         } catch {
