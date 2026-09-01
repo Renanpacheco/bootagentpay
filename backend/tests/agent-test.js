@@ -1,27 +1,27 @@
-import { processarMensagemDoAgente } from "./agent.js";
+import { processAgentMessage } from "../agents/agent.js";
 
-async function executarTeste() {
+async function runTest() {
   
-  let historico = [
+  let history = [
     { role: "user", content: "Quais produtos vocês têm disponíveis?" }
   ];
 
-  console.log("=== 1. Enviando mensagem para o Agente ===");
-  console.log("Usuário:", historico[0].content);
+  console.log("=== 1. Sending message to Agent ===");
+  console.log("User:", history[0].content);
 
   try {
     
-    const resultado = await processarMensagemDoAgente("user_1", historico);
+    const result = await processAgentMessage("user_1", history);
 
-    console.log("\n=== 2. Resposta do Agente ===");
-    console.log(resultado.respostaFinal);
+    console.log("\n=== 2. Agent Response ===");
+    console.log(result.finalResponse);
 
-    console.log("\n=== 3. Histórico completo de execução (incluindo Tools) ===");
-    console.dir(resultado.historicoAtualizado, { depth: null });
+    console.log("\n=== 3. Complete Execution History (including Tools) ===");
+    console.dir(result.updatedHistory, { depth: null });
 
-  } catch (erro) {
-    console.error("Erro durante a execução:", erro);
+  } catch (error) {
+    console.error("Error during execution:", error);
   }
 }
 
-executarTeste();
+runTest();

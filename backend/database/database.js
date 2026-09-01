@@ -1,9 +1,9 @@
-export const CATALOGO = process.env.CATALOGO 
-  ? JSON.parse(process.env.CATALOGO) 
+export const PRODUCTS = process.env.PRODUCTS 
+  ? JSON.parse(process.env.PRODUCTS) 
   : [];
 
-export const usuariosDB = process.env.USUARIOS 
-  ? JSON.parse(process.env.USUARIOS) 
+export const userDB = process.env.USERS 
+  ? JSON.parse(process.env.USERS) 
   : {};
 
-export const intencoesDB = new Map();
+export const intentionsDB = new Map();

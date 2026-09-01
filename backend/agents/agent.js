@@ -1,25 +1,25 @@
 import { TOOLS_SCHEMA } from "../schemas/schemas.js";
-import { listarCatalogo, registrarIntencao, realizarCompra } from "../controllers/tools.js";
+import { listProducts, registerIntent, makePurchase } from "../controllers/tools.js";
 
-function executarToolNoBackend(usuarioId, name, args) {
-  if (name === "listar_catalogo") {
-    return listarCatalogo(args.categoria);
+function executeToolOnBackend(userId, name, args) {
+  if (name === "list_catalog") {
+    return listProducts(args.category);
   }
-  if (name === "registrar_intencao") {
-    return registrarIntencao(usuarioId, args.produto_id, args.quantidade);
+  if (name === "register_intent") {
+    return registerIntent(userId, args.product_id, args.quantity);
   }
-  if (name === "realizar_compra") {
-    return realizarCompra(usuarioId, args.intencao_id, args.metodo_pagamento);
+  if (name === "make_purchase") {
+    return makePurchase(userId, args.intent_id, args.payment_method);
   }
-  throw new Error(`Tool desconhecida: ${name}`);
+  throw new Error(`Unknown tool: ${name}`);
 }
 
-export async function processarMensagemDoAgente(usuarioId, historicoMensagens) {
+export async function processAgentMessage(userId, messageHistory) {
   const OLLAMA_URL = process.env.OLLAMA_URL;
 
   let payload = {
     model: process.env.MODEL_NAME,
-    messages: historicoMensagens,
+    messages: messageHistory,
     tools: TOOLS_SCHEMA,
     stream: false
   };
@@ -31,27 +31,25 @@ export async function processarMensagemDoAgente(usuarioId, historicoMensagens) {
   });
 
   let data = await response.json();
-  let mensagemIa = data.message;
+  let aiMessage = data.message;
 
-  
-  if (mensagemIa.tool_calls && mensagemIa.tool_calls.length > 0) {
-    historicoMensagens.push(mensagemIa);
+  if (aiMessage.tool_calls && aiMessage.tool_calls.length > 0) {
+    messageHistory.push(aiMessage);
 
-    for (const toolCall of mensagemIa.tool_calls) {
-      const nomeTool = toolCall.function.name;
-      const argumentos = toolCall.function.arguments;
+    for (const toolCall of aiMessage.tool_calls) {
+      const toolName = toolCall.function.name;
+      const args = toolCall.function.arguments;
 
-      const resultadoBackend = executarToolNoBackend(usuarioId, nomeTool, argumentos);
+      const backendResult = executeToolOnBackend(userId, toolName, args);
 
-      historicoMensagens.push({
+      messageHistory.push({
         role: "tool",
-        name: nomeTool,
-        content: JSON.stringify(resultadoBackend)
+        name: toolName,
+        content: JSON.stringify(backendResult)
       });
     }
 
-    
-    payload.messages = historicoMensagens;
+    payload.messages = messageHistory;
 
     response = await fetch(OLLAMA_URL, {
       method: "POST",
@@ -60,13 +58,13 @@ export async function processarMensagemDoAgente(usuarioId, historicoMensagens) {
     });
 
     data = await response.json();
-    mensagemIa = data.message;
+    aiMessage = data.message;
   }
 
-  historicoMensagens.push(mensagemIa);
+  messageHistory.push(aiMessage);
 
   return {
-    respostaFinal: mensagemIa.content,
-    historicoAtualizado: historicoMensagens
+    finalResponse: aiMessage.content,
+    updatedHistory: messageHistory
   };
 }

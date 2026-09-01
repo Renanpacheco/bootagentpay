@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { usuariosDB } from "./database/database.js";
-import { processarMensagemDoAgente } from "./agents/agent.js";
+import { userDB } from "./database/database.js";
+import { processAgentMessage } from "./agents/agent.js";
 
 const app = express();
 
@@ -9,90 +9,85 @@ app.use(cors());
 app.use(express.json());
 app.use(cors({ origin: "http://localhost:5173" }));
 
+const validTokens = new Map();
 
-const tokensValidos = new Map();
-
-
-function autenticarUsuario(req, res, next) {
+function authenticateUser(req, res, next) {
   const authHeader = req.headers["authorization"];
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res.status(401).json({ 
-      erro: "NAO_AUTORIZADO", 
-      mensagem: "Token de autenticação não fornecido. Faça login para acessar." 
+      error: "UNAUTHORIZED", 
+      message: "Authentication token not provided. Please log in to access." 
     });
   }
 
   const token = authHeader.split(" ")[1];
-  const usuarioId = tokensValidos.get(token);
+  const userId = validTokens.get(token);
 
-  if (!usuarioId || !usuariosDB[usuarioId]) {
+  if (!userId || !userDB[userId]) {
     return res.status(401).json({ 
-      erro: "TOKEN_INVALIDO", 
-      mensagem: "Token inválido ou sessão expirada. Faça login novamente." 
+      error: "INVALID_TOKEN", 
+      message: "Invalid token or expired session. Please log in again." 
     });
   }
 
-  
-  req.usuario = usuariosDB[usuarioId];
+  req.user = userDB[userId];
   next();
 }
 
 app.post("/api/login", (req, res) => {
-  const { userId, senha } = req.body;
+  const { userId, password } = req.body;
 
-  const usuario = usuariosDB[userId];
+  const user = userDB[userId];
 
-  if (!usuario || String(usuario.senha) !== String(senha)) {
-    
+  if (!user || String(user.password) !== String(password)) {
     return res.status(401).json({ 
-      erro: "CREDENCIAIS_INVALIDAS", 
-      mensagem: "Usuário ou senha incorretos." 
+      error: "INVALID_CREDENTIALS", 
+      message: "Incorrect user or password." 
     });
   }
 
-  
   const token = `token_${Math.random().toString(36).substring(2, 10)}`;
-  tokensValidos.set(token, userId);
+  validTokens.set(token, userId);
 
   return res.status(200).json({
-    mensagem: "Login realizado com sucesso!",
+    message: "Login successful!",
     token: token,
-    usuario: {
-      id: usuario.id,
-      nome: usuario.nome,
-      limite: usuario.limite
+    user: {
+      id: user.id,
+      name: user.name,
+      limit: user.limit
     }
   });
 });
 
-app.post("/api/chat", autenticarUsuario, async (req, res) => {
+app.post("/api/chat", authenticateUser, async (req, res) => {
   const { history } = req.body;
 
   if (!Array.isArray(history)) {
     return res.status(400).json({ 
-      erro: "REQUISICAO_INVALIDA", 
-      mensagem: "O corpo da requisição deve conter um array 'history'." 
+      error: "INVALID_REQUEST", 
+      message: "The request body must contain a 'history' array." 
     });
   }
 
   try {
-    const resultado = await processarMensagemDoAgente(req.usuario.id, history);
+    const result = await processAgentMessage(req.user.id, history);
 
     return res.status(200).json({
-      resposta: resultado.respostaFinal,
-      historico: resultado.historicoAtualizado
+      response: result.finalResponse,
+      history: result.updatedHistory
     });
-  } catch (erro) {
-    console.error("Erro no processamento do chat:", erro);
+  } catch (error) {
+    console.error("Error processing chat:", error);
     return res.status(500).json({ 
-      erro: "ERRO_INTERNO", 
-      mensagem: "Falha ao processar a resposta do agente." 
+      error: "INTERNAL_ERROR", 
+      message: "Failed to process agent response." 
     });
   }
 });
 
 const PORT = 3000;
 app.listen(PORT, () => {
-  console.log(`🚀 API backend rodando na porta ${PORT}`);
+  console.log(`🚀 Backend API running on port ${PORT}`);
 });

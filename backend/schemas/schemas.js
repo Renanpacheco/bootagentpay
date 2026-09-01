@@ -2,12 +2,12 @@ export const TOOLS_SCHEMA = [
   {
     type: "function",
     function: {
-      name: "listar_catalogo",
-      description: "Retorna os produtos disponíveis no catálogo.",
+      name: "list_catalog",
+      description: "Returns the available products in the catalog.",
       parameters: {
         type: "object",
         properties: {
-          categoria: { type: "string", description: "Filtro opcional por categoria" }
+          category: { type: "string", description: "Optional category filter" }
         }
       }
     }
@@ -15,30 +15,30 @@ export const TOOLS_SCHEMA = [
   {
     type: "function",
     function: {
-      name: "registrar_intencao",
-      description: "Registra a intenção de compra de um item antes do pagamento.",
+      name: "register_intent",
+      description: "Registers a purchase intent for an item before payment.",
       parameters: {
         type: "object",
         properties: {
-          produto_id: { type: "string", description: "ID do produto presente no catálogo" },
-          quantidade: { type: "number", description: "Quantidade desejada (inteiro maior que 0)" }
+          product_id: { type: "string", description: "Product ID present in the catalog" },
+          quantity: { type: "number", description: "Desired quantity (integer greater than 0)" }
         },
-        required: ["produto_id", "quantidade"]
+        required: ["product_id", "quantity"]
       }
     }
   },
   {
     type: "function",
     function: {
-      name: "realizar_compra",
-      description: "Executa a compra a partir de uma intenção previamente registrada.",
+      name: "make_purchase",
+      description: "Executes the purchase from a previously registered intent.",
       parameters: {
         type: "object",
         properties: {
-          intencao_id: { type: "string", description: "Identificador retornado por registrar_intencao" },
-          metodo_pagamento: { type: "string", enum: ["cartao", "pix"], description: "Método de pagamento" }
+          intent_id: { type: "string", description: "Identifier returned by register_intent" },
+          payment_method: { type: "string", enum: ["cartao", "pix"], description: "Payment method" }
         },
-        required: ["intencao_id", "metodo_pagamento"]
+        required: ["intent_id", "payment_method"]
       }
     }
   }

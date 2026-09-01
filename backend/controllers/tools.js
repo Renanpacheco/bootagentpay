@@ -1,118 +1,110 @@
-import { CATALOGO, usuariosDB, intencoesDB } from "../database/database.js";
+import { PRODUCTS, userDB, intentionsDB } from "../database/database.js";
 
-
-export function listarCatalogo(categoria) {
-  if (categoria) {
-    const filtrados = CATALOGO.filter(
-      (p) => p.categoria.toLowerCase() === categoria.toLowerCase()
+export function listProducts(category) {
+  if (category) {
+    const filtered = PRODUCTS.filter(
+      (p) => p.category.toLowerCase() === category.toLowerCase()
     );
-    return { produtos: filtrados };
+    return { products: filtered };
   }
-  return { produtos: CATALOGO };
+  return { products: PRODUCTS };
 }
 
-
-export function registrarIntencao(usuarioId, produtoId, quantidade) {
-  const produto = CATALOGO.find((p) => p.id === produtoId);
-  if (!produto) {
-    return { erro: "PRODUTO_NAO_ENCONTRADO", mensagem: "Produto não existe no catálogo." };
+export function registerIntent(userId, productId, quantity) {
+  const product = PRODUCTS.find((p) => p.id === productId);
+  if (!product) {
+    return { error: "PRODUCT_NOT_FOUND", message: "Product does not exist in the catalog." };
   }
 
-  const qtd = Number(quantidade);
-  if (isNaN(qtd) || qtd <= 0) {
-    return { erro: "QUANTIDADE_INVALIDA", mensagem: "Quantidade deve ser maior que zero." };
+  const qty = Number(quantity);
+  if (isNaN(qty) || qty <= 0) {
+    return { error: "INVALID_QUANTITY", message: "Quantity must be greater than zero." };
   }
 
-  const valorTotal = produto.preco * qtd;
-  const intencaoId = `int_${Math.random().toString(36).substring(2, 9)}`;
-  const expiraEm = new Date(Date.now() + 15 * 60 * 1000);
+  const totalValue = product.price * qty;
+  const intentId = `int_${Math.random().toString(36).substring(2, 9)}`;
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-  const novaIntencao = {
-    intencao_id: intencaoId,
-    usuario_id: usuarioId,
-    produto_id: produtoId,
-    quantidade: qtd,
-    valor_total: valorTotal,
-    moeda: "BRL",
+  const newIntent = {
+    intent_id: intentId,
+    user_id: userId,
+    product_id: productId,
+    quantity: qty,
+    total: totalValue,
+    currency: "BRL",
     status: "pendente",
-    expira_em: expiraEm,
+    expires_at: expiresAt,
   };
 
-  intencoesDB.set(intencaoId, novaIntencao);
+  intentionsDB.set(intentId, newIntent);
 
   return {
-    intencao_id: novaIntencao.intencao_id,
-    produto_id: novaIntencao.produto_id,
-    quantidade: novaIntencao.quantidade,
-    valor_total: novaIntencao.valor_total,
-    moeda: novaIntencao.moeda,
-    status: novaIntencao.status,
-    expira_em: novaIntencao.expira_em.toISOString(),
+    intent_id: newIntent.intent_id,
+    product_id: newIntent.product_id,
+    quantity: newIntent.quantity,
+    total: newIntent.total,
+    currency: newIntent.currency,
+    status: newIntent.status,
+    expires_at: newIntent.expires_at.toISOString(),
   };
 }
 
-export function realizarCompra(usuarioId, intencaoId, metodoPagamento) {
-  const intencao = intencoesDB.get(intencaoId);
+export function makePurchase(userId, intentId, paymentMethod) {
+  const intent = intentionsDB.get(intentId);
 
-  
-  if (!intencao || intencao.usuario_id !== usuarioId) {
+  if (!intent || intent.user_id !== userId) {
     return {
-      status: "recusado",
-      erro: "INTENCAO_INVALIDA",
-      mensagem: "Intenção de compra inválida ou não pertence a esta sessão."
+      status: "refused",
+      error: "INVALID_INTENT",
+      message: "Purchase intent is invalid or does not belong to this session."
     };
   }
 
-  
-  if (intencao.status === "paga") {
+  if (intent.status === "finished") {
     return {
-      status: "recusado",
-      erro: "INTENCAO_JA_PAGA",
-      mensagem: "Esta intenção de compra já foi finalizada."
+      status: "refused",
+      error: "INTENT_ALREADY_PAID",
+      message: "This purchase intent has already been completed."
     };
   }
 
- 
-  if (new Date() > intencao.expira_em) {
-    intencao.status = "expirada";
+  if (new Date() > intent.expires_at) {
+    intent.status = "expirada";
     return {
-      status: "recusado",
-      erro: "INTENCAO_EXPIRADA",
-      mensagem: "O prazo de validade desta intenção expirou."
+      status: "refused",
+      error: "EXPIRED_INTENT",
+      message: "The validity period for this intent has expired."
     };
   }
 
-  const usuario = usuariosDB[usuarioId];
+  const user = userDB[userId];
 
-  
-  if (intencao.valor_total > usuario.limite) {
+  if (intent.total > user.limite) {
     return {
-      status: "recusado",
-      erro: "LIMITE_EXCEDIDO",
-      mensagem: `Compra recusada. O valor de R$ ${intencao.valor_total.toFixed(2)} excede o limite disponível de R$ ${usuario.limite.toFixed(2)}.`
+      status: "refused",
+      error: "LIMIT_EXCEEDED",
+      message: `Purchase refused. The amount of R$ ${intent.total.toFixed(2)} exceeds the available limit of R$ ${user.limite.toFixed(2)}.`
     };
   }
 
-  
-  if (metodoPagamento !== "cartao" && metodoPagamento !== "pix") {
+  if (paymentMethod !== "cartao" && paymentMethod !== "pix") {
     return {
-      status: "recusado",
-      erro: "METODO_INVALIDO",
-      mensagem: "Método de pagamento deve ser 'cartao' ou 'pix'."
+      status: "refused",
+      error: "INVALID_METHOD",
+      message: "Payment method must be 'cartao' or 'pix'."
     };
   }
 
-  
-  usuario.limite -= intencao.valor_total;
-  intencao.status = "paga";
+  user.limite -= intent.total;
+  intent.status = "finished";
 
   return {
-    status: "aprovado",
+    status: "approved",
     transacao_id: `tx_${Math.random().toString(36).substring(2, 9)}`,
-    intencao_id: intencao.intencao_id,
-    valor: intencao.valor_total,
-    metodo_pagamento: metodoPagamento,
-    limite_restante: usuario.limite,
+    intent_id: intent.intent_id,
+    valor: intent.total,
+    metodo_finishedmento: paymentMethod,
+    limite_restante: user.limite,
     data: new Date().toISOString()
   };
 }
