@@ -1,6 +1,6 @@
 # AgentPay
 
-**Autores**
+**Autores:**
 **Renan Bitencourt Pacheco,**
 **Letícia Amélia Schiavon Silva**
 
