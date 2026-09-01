@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
-import { usuariosDB } from "./database.js";
-import { processarMensagemDoAgente } from "./agent.js";
+import { usuariosDB } from "./database/database.js";
+import { processarMensagemDoAgente } from "./agents/agent.js";
 
 const app = express();
 
