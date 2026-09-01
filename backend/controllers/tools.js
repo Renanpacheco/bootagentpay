@@ -1,4 +1,4 @@
-import { CATALOGO, usuariosDB, intencoesDB } from "./database.js";
+import { CATALOGO, usuariosDB, intencoesDB } from "../database/database.js";
 
 
 export function listarCatalogo(categoria) {
