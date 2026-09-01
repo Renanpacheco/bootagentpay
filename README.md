@@ -1,7 +1,7 @@
 # AgentPay
 
 **Autores**
-**Renan Bitencourt Pacheco**
+**Renan Bitencourt Pacheco,**
 **Letícia Amélia Schiavon Silva**
 
 **AgentPay** é um protótipo de aplicação de pagamentos conversacionais, no qual um usuário pode interagir com um agente de inteligência artificial através de um chat para consultar produtos e realizar operações relacionadas a compras.
