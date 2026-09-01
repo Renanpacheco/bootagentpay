@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { enviarMensagemChat } from './api';
+import ui from './styles/ui.module.css';
+import styles from './Chat.module.css';
 
 export default function Chat({ user, onLogout }) {
     const [historico, setHistorico] = useState([]);
@@ -7,7 +9,7 @@ export default function Chat({ user, onLogout }) {
     const [loading, setLoading] = useState(false);
     const scrollRef = useRef(null);
 
-    
+
     const nomeUsuario = user?.nome || user?.username || localStorage.getItem('username') || 'Usuário';
     const limiteUsuario = user?.limite || localStorage.getItem('limite');
 
@@ -26,7 +28,7 @@ export default function Chat({ user, onLogout }) {
         setLoading(true);
 
         try {
-            
+
             const dados = await enviarMensagemChat(novoHistorico);
             setHistorico(dados.historico);
         } catch {
@@ -42,57 +44,58 @@ export default function Chat({ user, onLogout }) {
     const mensagensVisiveis = historico.filter(m => m.role === 'user' || m.role === 'assistant');
 
     return (
-        <div className="app-shell">
-            <header className="app-header">
-                <div className="brand">
-                    <span className="dot" />
+        <div className={styles.shell}>
+            <header className={styles.header}>
+                <div className={`${ui.brandLockup} ${ui.brandLockupSm}`}>
+                    <span className={`${ui.dot} ${ui.dotXs}`} />
                     pagamentos.ai
                 </div>
-                <div className="user-info">
+                <div className={styles.userInfo}>
                     {nomeUsuario && <span>Olá, {nomeUsuario}</span>}
-                    {limiteUsuario && <span className="limite-tag">limite R${Number(limiteUsuario).toFixed(2)}</span>}
-                    <button className="logout-btn" onClick={onLogout}>Sair</button>
+                    {limiteUsuario && <span className={`${ui.badge} ${ui.badgeDark}`}>limite R${Number(limiteUsuario).toFixed(2)}</span>}
+                    <button className={`${ui.btn} ${ui.btnGhost}`} onClick={onLogout}>Sair</button>
                 </div>
             </header>
 
-            <div className="chat-wrap">
-                <div className="chat-panel">
-                    <div className="chat-scroll" ref={scrollRef}>
+            <div className={styles.wrap}>
+                <div className={styles.panelWrap}>
+                    <div className={`${ui.panel} ${styles.scrollArea}`} ref={scrollRef}>
                         {mensagensVisiveis.length === 0 && !loading && (
-                            <div className="empty-state">
-                                <div className="icon">$</div>
-                                <p>Pergunte o que temos à venda, escolha um produto e finalize a compra por aqui mesmo.</p>
+                            <div className={styles.emptyState}>
+                                <div className={styles.emptyIcon}>$</div>
+                                <p className={styles.emptyText}>Pergunte o que temos à venda, escolha um produto e finalize a compra por aqui mesmo.</p>
                             </div>
                         )}
 
                         {mensagensVisiveis.map((m, i) => (
-                            <div key={i} className={`msg-row ${m.role === 'user' ? 'user' : 'agent'}`}>
-                                <div className={`avatar ${m.role === 'user' ? 'user' : 'agent'}`}>
+                            <div key={i} className={`${styles.msgRow} ${m.role === 'user' ? styles.msgRowUser : ''}`}>
+                                <div className={`${ui.avatar} ${m.role === 'user' ? ui.avatarUser : 'ui.avatarAgent'}`}>
                                     {m.role === 'user' ? (nomeUsuario[0]?.toUpperCase() || 'V') : 'A'}
                                 </div>
-                                <div className={`bubble ${m.role === 'user' ? 'user' : 'agent'}`}>{m.content}</div>
+                                <div className={`${ui.bubble} ${m.role === 'user' ? ui.bubbleUser : ui.bubbleAgent}`}>{m.content}</div>
                             </div>
                         ))}
 
                         {loading && (
-                            <div className="typing-row">
-                                <div className="avatar agent">A</div>
-                                <div className="typing-dots">
-                                    <span /><span /><span />
+                            <div className={styles.typingRow}>
+                                <div className={`${ui.avatar} ${ui.avatarAgent}`}>A</div>
+                                <div className={styles.typingDots}>
+                                    <span className={ui.dotBounce} /><span className={ui.dotBounce} /><span className={ui.dotBounce} />
                                 </div>
                             </div>
                         )}
                     </div>
 
-                    <div className="composer">
+                    <div className={styles.composer}>
                         <input
+                            className={`${ui.input} ${ui.inputPill}`}
                             value={input}
                             onChange={e => setInput(e.target.value)}
                             onKeyDown={e => e.key === 'Enter' && enviar()}
                             placeholder="Digite sua mensagem..."
                             disabled={loading}
                         />
-                        <button className="send-btn" onClick={enviar} disabled={loading || !input.trim()} aria-label="Enviar">
+                        <button className={`${ui.btn} ${ui.btnIcon}`} onClick={enviar} disabled={loading || !input.trim()} aria-label="Enviar">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                                 <path d="M4 12L20 4L14 20L11 13L4 12Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" />
                             </svg>
